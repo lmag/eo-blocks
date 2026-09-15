@@ -1,8 +1,8 @@
 === EO Blocks ===
 Contributors:      Eoxia
 Tags:              block, gutenberg
-Tested up to:      6.7.1
-Stable tag:        1.2.0
+Tested up to:      7.1.0
+Stable tag:        2.0.0
 License:           GPL-3.0
 License URI:       https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -31,6 +31,19 @@ EO Blocks offers an extensive range of customizable blocks, making it easier tha
 All development for this plugin is open source and handled via [GitHub](https://github.com/Eoxia/eo-blocks) any issues or pull requests should be posted there.
 
 == Changelog ==
+
+= 2.0.0 =
+* New Reviews blocks: Google Reviews (count and rating), Trustpilot, TripAdvisor and TheFork, with a dedicated settings page and live preview via the REST API.
+* Add Google Business Profile API (OAuth 2.0) to bypass the native 5 reviews limit.
+* New Map block features: multilingual OpenFreeMap basemap with a design picker, advanced marker options (type, color, animation), markdown headings/descriptions and custom link labels for markers.
+* Add optional FAQPage schema.org markup on the Accordion block.
+* Add entrance/exit CSS animations to the Styles panel of all blocks.
+* Add responsive breakpoint display control on all blocks.
+* Add responsive columns control on the Columns block.
+* Redesign the Carousel block editing UX: drag the dots to reorder slides, insertion bars, virtual "add a slide" slot.
+* Add center and autoHeight properties on the Carousel block.
+* Add WPML compatibility.
+* Fix Carousel entrance/exit animations.
 
 = 1.2.0 =
 * New naming convention for blocks: eo/ becomes eo-blocks/ to comply with the WordPress standard. Migration script added.
