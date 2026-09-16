@@ -36,6 +36,8 @@ if ( 'edit' === $action ) {
 				'width'     => '100%',
 				'height'    => '600px',
 				'zoom'      => 12,
+				'minZoom'   => 0,
+				'maxZoom'   => 19,
 				'centerLat' => 43.6107,
 				'centerLng' => 3.8767,
 				'tileStyle' => 'osm',
@@ -192,6 +194,28 @@ wp_reset_postdata();
 						</p>
 					</div>
 
+					<?php
+						// Zoom range supported by each basemap provider (kept in sync with the
+						// PROVIDER_ZOOM_LIMITS map in assets/js/maps-admin.js).
+						$zoom_bounds_by_style = array(
+							'osm'          => array( 0, 19 ),
+							'carto-light'  => array( 0, 19 ),
+							'carto-dark'   => array( 0, 19 ),
+							'opentopo'     => array( 0, 19 ),
+							'openfreemap'  => array( 0, 20 ),
+						);
+						$current_tile_style = $map_to_edit['settings']['tileStyle'] ?? 'osm';
+						list( $style_min_zoom, $style_max_zoom ) = $zoom_bounds_by_style[ $current_tile_style ] ?? array( 0, 19 );
+
+						$current_zoom = intval( $map_to_edit['settings']['zoom'] ?? 12 );
+						$min_zoom_val = intval( $map_to_edit['settings']['minZoom'] ?? $style_min_zoom );
+						$max_zoom_val = intval( $map_to_edit['settings']['maxZoom'] ?? $style_max_zoom );
+
+						// Keep the stored bounds coherent with the current zoom level and the
+						// provider's own limits before first render (JS re-checks this on load too).
+						$min_zoom_val = max( $style_min_zoom, min( $min_zoom_val, $current_zoom ) );
+						$max_zoom_val = min( $style_max_zoom, max( $max_zoom_val, $current_zoom ) );
+					?>
 					<div style="background: #f8f9fa; border: 1px solid #ccd0d4; padding: 12px; border-radius: 4px;">
 						<h4 style="margin-top: 0; margin-bottom: 8px; font-weight: bold;"><?php esc_html_e( 'Vue par défaut', 'eo-blocks' ); ?></h4>
 						<p style="font-size: 11px; margin: 0 0 10px 0; color: #666;"><?php esc_html_e( 'Ces coordonnées sont synchronisées automatiquement lorsque vous zoomez ou déplacez la carte.', 'eo-blocks' ); ?></p>
@@ -205,9 +229,19 @@ wp_reset_postdata();
 								<input type="text" id="eo-map-center-lng" value="<?php echo esc_attr( $map_to_edit['settings']['centerLng'] ?? '3.8767' ); ?>" readonly style="width: 100%; font-size: 11px; background: #eee;" />
 							</div>
 						</div>
-						<div>
+						<div style="margin-bottom: 8px;">
 							<span style="font-size: 11px; color: #666;"><?php esc_html_e( 'Niveau de Zoom', 'eo-blocks' ); ?></span>
-							<input type="text" id="eo-map-zoom" value="<?php echo esc_attr( $map_to_edit['settings']['zoom'] ?? '12' ); ?>" readonly style="width: 100%; font-size: 11px; background: #eee;" />
+							<input type="text" id="eo-map-zoom" value="<?php echo esc_attr( $current_zoom ); ?>" readonly style="width: 100%; font-size: 11px; background: #eee;" />
+						</div>
+						<div style="display: flex; gap: 10px;">
+							<div style="flex: 1;">
+								<span style="font-size: 11px; color: #666;"><?php esc_html_e( 'Zoom minimal', 'eo-blocks' ); ?> (<span id="eo-map-min-zoom-value"><?php echo esc_html( $min_zoom_val ); ?></span>)</span>
+								<input type="range" id="eo-map-min-zoom" min="<?php echo esc_attr( $style_min_zoom ); ?>" max="<?php echo esc_attr( $style_max_zoom ); ?>" step="1" value="<?php echo esc_attr( $min_zoom_val ); ?>" style="width: 100%;" />
+							</div>
+							<div style="flex: 1;">
+								<span style="font-size: 11px; color: #666;"><?php esc_html_e( 'Zoom maximal', 'eo-blocks' ); ?> (<span id="eo-map-max-zoom-value"><?php echo esc_html( $max_zoom_val ); ?></span>)</span>
+								<input type="range" id="eo-map-max-zoom" min="<?php echo esc_attr( $style_min_zoom ); ?>" max="<?php echo esc_attr( $style_max_zoom ); ?>" step="1" value="<?php echo esc_attr( $max_zoom_val ); ?>" style="width: 100%;" />
+							</div>
 						</div>
 					</div>
 

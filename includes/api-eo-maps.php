@@ -47,6 +47,8 @@ function eo_maps_ajax_save_map() {
 		'width'     => sanitize_text_field( $settings['width'] ?? '100%' ),
 		'height'    => sanitize_text_field( $settings['height'] ?? '600px' ),
 		'zoom'      => intval( $settings['zoom'] ?? 2 ),
+		'minZoom'   => intval( $settings['minZoom'] ?? 0 ),
+		'maxZoom'   => intval( $settings['maxZoom'] ?? 19 ),
 		'centerLat' => floatval( $settings['centerLat'] ?? 0.0 ),
 		'centerLng' => floatval( $settings['centerLng'] ?? 0.0 ),
 		'tileStyle' => sanitize_text_field( $settings['tileStyle'] ?? 'osm' ),

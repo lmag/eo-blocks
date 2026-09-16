@@ -87,9 +87,14 @@
 		var centerLat = parseFloat(settings.centerLat) || 43.6107;
 		var centerLng = parseFloat(settings.centerLng) || 3.8767;
 		var zoom = parseInt(settings.zoom) || 12;
+		var minZoom = settings.minZoom !== undefined && settings.minZoom !== null ? parseInt(settings.minZoom) : 0;
+		var maxZoom = settings.maxZoom !== undefined && settings.maxZoom !== null ? parseInt(settings.maxZoom) : 19;
 
 		// Initialize Leaflet Map
-		var map = L.map(containerId).setView([centerLat, centerLng], zoom);
+		var map = L.map(containerId, {
+			minZoom: minZoom,
+			maxZoom: maxZoom
+		}).setView([centerLat, centerLng], zoom);
 
 		// Tile Style URLs
 		var tileProviders = {
