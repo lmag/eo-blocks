@@ -123,6 +123,20 @@ jQuery(document).ready(function($) {
     var mapId = parseInt(window.eoMapData.id) || 0;
     var mapSettings = window.eoMapData.settings || {};
     var markersList = window.eoMapData.markers || [];
+
+    // Zoom range supported by each basemap provider (kept in sync with the
+    // $zoom_bounds_by_style map in includes/admin/views/html-admin-page-maps.php).
+    var PROVIDER_ZOOM_LIMITS = {
+        'osm': { min: 0, max: 19 },
+        'carto-light': { min: 0, max: 19 },
+        'carto-dark': { min: 0, max: 19 },
+        'opentopo': { min: 0, max: 19 },
+        'openfreemap': { min: 0, max: 20 }
+    };
+
+    function getProviderZoomLimits(styleKey) {
+        return PROVIDER_ZOOM_LIMITS[styleKey] || PROVIDER_ZOOM_LIMITS['osm'];
+    }
     
     var leafletMap = null;
     var currentTileLayer = null;
@@ -181,6 +195,8 @@ jQuery(document).ready(function($) {
             width: $('#eo-map-width').val().trim() || '100%',
             height: $('#eo-map-height').val().trim() || '600px',
             zoom: parseInt($('#eo-map-zoom').val()) || 12,
+            minZoom: parseInt($('#eo-map-min-zoom').val()) || 0,
+            maxZoom: parseInt($('#eo-map-max-zoom').val()) || 19,
             centerLat: parseFloat($('#eo-map-center-lat').val()) || 43.6107,
             centerLng: parseFloat($('#eo-map-center-lng').val()) || 3.8767,
             tileStyle: $('#eo-map-style').val() || 'osm',
@@ -400,6 +416,71 @@ jQuery(document).ready(function($) {
     $('#eo-map-language').val(mapSettings.mapLanguage || 'local');
     $('#eo-map-design').val(mapSettings.mapDesign || 'positron');
 
+    function clampNumber(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+    }
+
+    // Applies the current basemap provider's zoom range to the min/max zoom
+    // sliders, keeps min <= max, and syncs those bounds onto the Leaflet map
+    // (which will itself pull the current view's zoom back into range).
+    function applyZoomProviderLimits(styleKey) {
+        var limits = getProviderZoomLimits(styleKey);
+
+        $('#eo-map-min-zoom').attr({ min: limits.min, max: limits.max });
+        $('#eo-map-max-zoom').attr({ min: limits.min, max: limits.max });
+
+        var minVal = clampNumber(parseInt($('#eo-map-min-zoom').val(), 10) || limits.min, limits.min, limits.max);
+        var maxVal = clampNumber(parseInt($('#eo-map-max-zoom').val(), 10) || limits.max, limits.min, limits.max);
+
+        if (minVal > maxVal) {
+            maxVal = minVal;
+        }
+
+        $('#eo-map-min-zoom').val(minVal);
+        $('#eo-map-max-zoom').val(maxVal);
+        $('#eo-map-min-zoom-value').text(minVal);
+        $('#eo-map-max-zoom-value').text(maxVal);
+
+        leafletMap.setMinZoom(minVal);
+        leafletMap.setMaxZoom(maxVal);
+    }
+
+    applyZoomProviderLimits(mapSettings.tileStyle || 'osm');
+
+    // Zoom minimal slider: never allow it to go above the current zoom maximal value.
+    $('#eo-map-min-zoom').on('input', function() {
+        var min = parseInt($(this).val(), 10);
+        var max = parseInt($('#eo-map-max-zoom').val(), 10);
+
+        if (min > max) {
+            max = min;
+            $('#eo-map-max-zoom').val(max);
+            $('#eo-map-max-zoom-value').text(max);
+        }
+
+        $('#eo-map-min-zoom-value').text(min);
+        leafletMap.setMinZoom(min);
+        leafletMap.setMaxZoom(max);
+        markChangesAsUnsaved();
+    });
+
+    // Zoom maximal slider: never allow it to go below the current zoom minimal value.
+    $('#eo-map-max-zoom').on('input', function() {
+        var max = parseInt($(this).val(), 10);
+        var min = parseInt($('#eo-map-min-zoom').val(), 10);
+
+        if (max < min) {
+            min = max;
+            $('#eo-map-min-zoom').val(min);
+            $('#eo-map-min-zoom-value').text(min);
+        }
+
+        $('#eo-map-max-zoom-value').text(max);
+        leafletMap.setMinZoom(min);
+        leafletMap.setMaxZoom(max);
+        markChangesAsUnsaved();
+    });
+
     // Flag to avoid triggering unsaved changes on initial map load
     var isMapInitialized = false;
 
@@ -409,6 +490,7 @@ jQuery(document).ready(function($) {
         toggleOpenFreeMapFields(styleKey);
         var ofm = currentOpenFreeMapSettings();
         setTileLayer(styleKey, ofm.lang, ofm.design);
+        applyZoomProviderLimits(styleKey);
         markChangesAsUnsaved();
     });
 
